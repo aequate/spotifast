@@ -13,6 +13,7 @@ final class AudioOutput {
     private var interruption = AudioInterruptionGate()
     private var intendedRunning = false
     private var sessionActive = false
+    var isRunning: Bool { engine.isRunning }
     init() {
         let center = NotificationCenter.default
         observers.append(center.addObserver(forName: AVAudioSession.interruptionNotification, object: nil, queue: .main) { [weak self] note in
@@ -41,7 +42,9 @@ final class AudioOutput {
     }
     private func configure() throws {
         let session = AVAudioSession.sharedInstance()
-        try session.setCategory(.playback, mode: .default, options: [.allowAirPlay, .allowBluetoothA2DP])
+        // Playback supports AirPlay and A2DP implicitly. The explicit AirPlay
+        // option belongs to playAndRecord and can reject this category.
+        try session.setCategory(.playback, mode: .default, options: [])
         try session.setPreferredSampleRate(44_100)
         try session.setPreferredIOBufferDuration(0.0232)
         try session.setActive(true)

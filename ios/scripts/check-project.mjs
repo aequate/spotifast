@@ -36,7 +36,7 @@ if (process.argv.includes('--syntax')) {
     const language = await Language.load(resolve(root, 'build/qa/node_modules/tree-sitter-wasms/out/tree-sitter-swift.wasm'));
     const parser = new Parser(); parser.setLanguage(language);
     let count = 0;
-    for (const folder of ['Spotifast', 'Tests', 'UITests']) for (const name of readdirSync(resolve(root, folder)).filter(n => n.endsWith('.swift'))) {
+    for (const folder of ['Spotifast', 'Tests', 'PortableTests', 'UITests']) for (const name of readdirSync(resolve(root, folder)).filter(n => n.endsWith('.swift'))) {
         const text = readFileSync(resolve(root, folder, name), 'utf8');
         const tree = parser.parse(text);
         const errors = [];

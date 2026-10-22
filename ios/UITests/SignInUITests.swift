@@ -13,6 +13,7 @@ final class SignInUITests: XCTestCase {
             XCUIDevice.shared.orientation = orientation
             let field = app.textFields["signin.clientID"]
             XCTAssertTrue(field.waitForExistence(timeout: 15))
+            XCTAssertFalse(app.alerts.firstMatch.exists, app.alerts.firstMatch.debugDescription)
             reveal(field, in: app); XCTAssertTrue(field.isHittable)
             field.tap()
             XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5))
@@ -27,6 +28,7 @@ final class SignInUITests: XCTestCase {
         defer { app.terminate() }
         let field = app.textFields["signin.clientID"]
         XCTAssertTrue(field.waitForExistence(timeout: 15))
+        XCTAssertFalse(app.alerts.firstMatch.exists, app.alerts.firstMatch.debugDescription)
         reveal(field, in: app); field.tap()
         let existing = field.value as? String ?? ""
         field.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: existing.count) + "invalid")
@@ -46,6 +48,7 @@ final class SignInUITests: XCTestCase {
         app.launch(); defer { app.terminate() }
         let field = app.textFields["signin.clientID"]
         XCTAssertTrue(field.waitForExistence(timeout: 15))
+        XCTAssertFalse(app.alerts.firstMatch.exists, app.alerts.firstMatch.debugDescription)
         reveal(field, in: app); XCTAssertTrue(field.isHittable)
         let submit = app.buttons["signin.submit"]
         reveal(submit, in: app); XCTAssertTrue(submit.isHittable)

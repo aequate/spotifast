@@ -1,6 +1,10 @@
 import Foundation
 import XCTest
+#if canImport(SpotifastLogic)
 @testable import SpotifastLogic
+#else
+@testable import Spotifast
+#endif
 
 final class PlaylistTests: XCTestCase {
     private func rows(_ count: Int) throws -> [ItemRow] {

@@ -1,8 +1,25 @@
 import XCTest
 import MediaPlayer
+import AVFoundation
 @testable import Spotifast
 
 final class SpotifastTests: XCTestCase {
+    @MainActor
+    func testRealNativeAudioGraphStartsStopsAndReopensWithoutAnAccount() async throws {
+        let output = AudioOutput()
+        defer { output.stop() }
+        for _ in 0..<2 {
+            try output.start()
+            XCTAssertEqual(AVAudioSession.sharedInstance().category, .playback)
+            XCTAssertTrue(output.isRunning)
+            try await Task.sleep(for: .milliseconds(150))
+            XCTAssertTrue(output.isRunning)
+            output.stop()
+            XCTAssertFalse(output.isRunning)
+        }
+        // With no account the production Rust sink returns silence. This
+        // verifies the native graph lifecycle, not Spotify streaming/audibility.
+    }
     @MainActor
     func testNativeNowPlayingMetadataAndCommandsFollowTheLocalDevice() throws {
         let controls = MediaControls()

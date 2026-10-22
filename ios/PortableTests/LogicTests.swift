@@ -1,6 +1,10 @@
 import Foundation
 import XCTest
+#if canImport(SpotifastLogic)
 @testable import SpotifastLogic
+#else
+@testable import Spotifast
+#endif
 
 final class LogicTests: XCTestCase {
     func testJSONRoundTripsNullableAndNestedSpotifyResponses() throws {

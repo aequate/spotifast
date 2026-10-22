@@ -124,6 +124,7 @@ enum LibrarySection: String, CaseIterable, Identifiable {
 }
 
 struct EngineSnapshot: Decodable, Sendable {
+    let generation: UInt64
     struct QueueRow: Decodable, Sendable { let uri: String; let manual: Bool }
     let connected: Bool
     let active: Bool

@@ -109,6 +109,18 @@
 			isa = PBXBuildFile;
 			fileRef = E863A3BFE721109FB539A482;
 		};
+		35B4DD4104AD1608E4C5AA0D = {
+			isa = PBXBuildFile;
+			fileRef = 114468D5C999BF1958C11C26;
+		};
+		25D09FD9AA500FCF6389999D = {
+			isa = PBXBuildFile;
+			fileRef = 9117FF4796EAFAB135846D48;
+		};
+		41C426DC24FC0F4CB9B6B93B = {
+			isa = PBXBuildFile;
+			fileRef = 1976E90B265FCD775EDDE2C5;
+		};
 		7C49CCAA285912600077E63D = {
 			isa = PBXBuildFile;
 			fileRef = 56354EDC8685178FD9C655C4;
@@ -290,6 +302,24 @@
 			path = Tests/SpotifastTests.swift;
 			sourceTree = "<group>";
 		};
+		114468D5C999BF1958C11C26 = {
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.swift;
+			path = PortableTests/LogicTests.swift;
+			sourceTree = "<group>";
+		};
+		9117FF4796EAFAB135846D48 = {
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.swift;
+			path = PortableTests/PlaylistTests.swift;
+			sourceTree = "<group>";
+		};
+		1976E90B265FCD775EDDE2C5 = {
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.swift;
+			path = PortableTests/StorageTests.swift;
+			sourceTree = "<group>";
+		};
 		56354EDC8685178FD9C655C4 = {
 			isa = PBXFileReference;
 			lastKnownFileType = sourcecode.swift;
@@ -397,6 +427,9 @@
 				91DC406F76E79AA1850ADA73,
 				01DF47F8A14358D6866CAC70,
 				E863A3BFE721109FB539A482,
+				114468D5C999BF1958C11C26,
+				9117FF4796EAFAB135846D48,
+				1976E90B265FCD775EDDE2C5,
 			);
 			sourceTree = "<group>";
 		};
@@ -597,6 +630,9 @@
 				5BDFC85BC58EE9E646110DE6,
 				D7D1DAA72F909FCA6A17B6A5,
 				B44416AFB17C6B62DF6F93CD,
+				35B4DD4104AD1608E4C5AA0D,
+				25D09FD9AA500FCF6389999D,
+				41C426DC24FC0F4CB9B6B93B,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

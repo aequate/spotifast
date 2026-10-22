@@ -10,7 +10,7 @@ const add = (name, value) => { const key = id(name); objects[key] = value; retur
 const ref = (path, type) => add(path, { isa: 'PBXFileReference', lastKnownFileType: type, path, sourceTree: '<group>' });
 const build = (path, type) => add('build:' + path, { isa: 'PBXBuildFile', fileRef: ref(path, type) });
 const swift = readdirSync(resolve(root, 'Spotifast')).filter(n => n.endsWith('.swift')).sort().map(n => 'Spotifast/' + n);
-const testFiles = readdirSync(resolve(root, 'Tests')).filter(n => n.endsWith('.swift')).sort().map(n => 'Tests/' + n);
+const testFiles = ['Tests', 'PortableTests'].flatMap(folder => readdirSync(resolve(root, folder)).filter(n => n.endsWith('.swift')).sort().map(n => folder + '/' + n));
 const uiFiles = readdirSync(resolve(root, 'UITests')).filter(n => n.endsWith('.swift')).sort().map(n => 'UITests/' + n);
 const sources = add('sources', { isa: 'PBXSourcesBuildPhase', buildActionMask: 2147483647, files: swift.map(n => build(n, 'sourcecode.swift')), runOnlyForDeploymentPostprocessing: 0 });
 const tests = add('test-sources', { isa: 'PBXSourcesBuildPhase', buildActionMask: 2147483647, files: testFiles.map(n => build(n, 'sourcecode.swift')), runOnlyForDeploymentPostprocessing: 0 });
@@ -52,7 +52,7 @@ const objectText = sections.map(type => `/* Begin ${type} section */\n` + Object
 const contents = `// !$*UTF8*$!\n{\n\tarchiveVersion = 1;\n\tclasses = {};\n\tobjectVersion = 56;\n\tobjects = {\n${objectText}\t};\n\trootObject = ${id('project')};\n}\n`;
 if (process.argv.includes('--check')) {
     if (readFileSync(resolve(projectPath, 'project.pbxproj'), 'utf8') !== contents) throw new Error('Xcode project is stale. Run node ios/scripts/generate-project.mjs');
-    console.log(`Xcode project matches ${swift.length} app sources and ${testFiles.length} test sources.`);
+    console.log(`Xcode project matches ${swift.length} app, ${testFiles.length} unit-test and ${uiFiles.length} UI-test sources.`);
 } else {
     writeFileSync(resolve(projectPath, 'project.pbxproj'), contents);
     writeFileSync(resolve(projectPath, 'xcshareddata/xcschemes/Spotifast.xcscheme'), `<?xml version="1.0" encoding="UTF-8"?>

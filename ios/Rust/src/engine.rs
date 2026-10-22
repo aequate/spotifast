@@ -43,6 +43,7 @@ impl Notify {
 #[derive(Default, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Snapshot {
+    pub generation: u64,
     pub active: bool,
     pub connected: bool,
     pub connecting: bool,
@@ -217,7 +218,10 @@ impl Engine {
     }
 
     pub fn disconnect(&self) {
-        self.generation.fetch_add(1, Ordering::SeqCst);
+        let generation = self
+            .generation
+            .fetch_add(1, Ordering::SeqCst)
+            .wrapping_add(1);
         self.pcm.shutdown.store(true, Ordering::Release);
         {
             let _producer = self.pcm.producer.lock().unwrap_or_else(|p| p.into_inner());
@@ -235,7 +239,10 @@ impl Engine {
             current.session.shutdown();
         }
         *self.credentials.lock().unwrap_or_else(|p| p.into_inner()) = None;
-        *self.snapshot.lock().unwrap_or_else(|p| p.into_inner()) = Snapshot::default();
+        *self.snapshot.lock().unwrap_or_else(|p| p.into_inner()) = Snapshot {
+            generation,
+            ..Snapshot::default()
+        };
         self.notify.fire();
     }
 
@@ -267,6 +274,7 @@ impl Engine {
                 self.pcm.shutdown.store(false, Ordering::Release);
                 let shared = self.snapshot.clone();
                 *shared.lock().unwrap_or_else(|p| p.into_inner()) = Snapshot {
+                    generation,
                     connecting: true,
                     device_id: device_id.clone(),
                     volume: u16::MAX,
@@ -805,6 +813,21 @@ impl Sink for IosSink {
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn snapshots_distinguish_replaced_connections_after_revision_resets() {
+        let engine = super::Engine::new(super::Notify(None, 0)).unwrap();
+        let initial = serde_json::to_value(engine.snapshot()).unwrap();
+        let mut previous = initial["generation"]
+            .as_u64()
+            .expect("snapshot needs a connection generation");
+        for _ in 0..32 {
+            engine.disconnect();
+            let next = serde_json::to_value(engine.snapshot()).unwrap();
+            let current = next["generation"].as_u64().unwrap();
+            assert!(current > previous);
+            previous = current;
+        }
+    }
     use super::*;
     use librespot_playback::player::QueueTrack;
 

@@ -26,6 +26,7 @@ final class AppStore: ObservableObject {
     private let audio = AudioOutput()
     private let media = MediaControls()
     private var generation = 0
+    private var engineGeneration: UInt64 = 0
     private var foreground = true
     private var poll: Task<Void, Never>?
     private var preferencesSave: Task<Void, Never>?
@@ -187,6 +188,8 @@ final class AppStore: ObservableObject {
     private func receive(_ snapshot: EngineSnapshot, credentials: Data?) async {
         guard let account = profile?.id else { audio.stop(); return }
         guard snapshot.username.isEmpty || snapshot.username == account else { return }
+        guard snapshot.generation >= engineGeneration else { return }
+        engineGeneration = snapshot.generation
         let epoch = generation
         let beganPlaying = snapshot.playing && local?.playing != true
         local = snapshot
@@ -211,7 +214,7 @@ final class AppStore: ObservableObject {
         } else { audio.stop() }
         media.update(playback)
         if lostLocalDevice, foreground { await refreshPlayback() }
-        guard epoch == generation, local?.revision == snapshot.revision else { return }
+        guard epoch == generation, snapshot.generation == engineGeneration, local?.revision == snapshot.revision else { return }
         if playback.isLocal, Date() > optimisticUntil {
             let old = queue
             let changed = old.map(\.uri) != snapshot.queue.map(\.uri) || old.map(\.manual) != snapshot.queue.map(\.manual)
@@ -222,12 +225,12 @@ final class AppStore: ObservableObject {
             }
         }
         if !credentialsSaved, let credentials {
-            do { try await oauth.savePlaybackCredentials(credentials, account: account); if epoch == generation { credentialsSaved = true } } catch is CancellationError { return } catch { if epoch == generation { self.error = error.localizedDescription } }
+            do { try await oauth.savePlaybackCredentials(credentials, account: account); if epoch == generation, snapshot.generation == engineGeneration { credentialsSaved = true } } catch is CancellationError { return } catch { if epoch == generation, snapshot.generation == engineGeneration { self.error = error.localizedDescription } }
         }
-        guard epoch == generation, profile?.id == account else { return }
+        guard epoch == generation, profile?.id == account, snapshot.generation == engineGeneration, local?.revision == snapshot.revision else { return }
         let session: JSON = .object(["account": .string(account), "uri": snapshot.uri.map(JSON.string) ?? .null, "context": .string(snapshot.contextUri), "position_ms": .number(Double(snapshot.positionMs)), "manual": .strings(snapshot.queue.filter(\.manual).map(\.uri))])
         if snapshot.uri != nil, session != lastSession {
-            do { try await files.saveSession(session); if epoch == generation { lastSession = session; savedSession = session } } catch { if epoch == generation { self.error = error.localizedDescription } }
+            do { try await files.saveSession(session); if epoch == generation, snapshot.generation == engineGeneration { lastSession = session; savedSession = session } } catch { if epoch == generation, snapshot.generation == engineGeneration { self.error = error.localizedDescription } }
         }
     }
 

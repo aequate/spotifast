@@ -1,6 +1,10 @@
 import Foundation
 import XCTest
+#if canImport(SpotifastLogic)
 @testable import SpotifastLogic
+#else
+@testable import Spotifast
+#endif
 
 final class StorageTests: XCTestCase {
     private func temporary() -> URL { FileManager.default.temporaryDirectory.appendingPathComponent("spotifast-tests-" + UUID().uuidString, isDirectory: true) }

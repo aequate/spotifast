@@ -11,7 +11,7 @@ enum Keychain {
         var result: CFTypeRef?
         let status = SecItemCopyMatching(query as CFDictionary, &result)
         if status == errSecItemNotFound { return nil }
-        guard status == errSecSuccess else { throw AppError.message("Keychain is unavailable (\(status)). Unlock your iPhone and try again.") }
+        guard status == errSecSuccess else { throw failure(status, action: "read") }
         return result as? Data
     }
     static func write(_ data: Data, name: String) throws {
@@ -19,12 +19,19 @@ enum Keychain {
         let attributes: [String: Any] = [kSecValueData as String: data, kSecAttrAccessible as String: kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly]
         let status = SecItemUpdate(key as CFDictionary, attributes as CFDictionary)
         if status == errSecItemNotFound {
-            guard SecItemAdd(key.merging(attributes) { _, new in new } as CFDictionary, nil) == errSecSuccess else { throw AppError.message("Could not save authorization to Keychain") }
-        } else if status != errSecSuccess { throw AppError.message("Could not update authorization in Keychain") }
+            let added = SecItemAdd(key.merging(attributes) { _, new in new } as CFDictionary, nil)
+            guard added == errSecSuccess else { throw failure(added, action: "save") }
+        } else if status != errSecSuccess { throw failure(status, action: "update") }
     }
     static func delete(_ name: String) throws {
         let status = SecItemDelete([kSecClass as String: kSecClassGenericPassword, kSecAttrService as String: service, kSecAttrAccount as String: name] as CFDictionary)
-        guard status == errSecSuccess || status == errSecItemNotFound else { throw AppError.message("Could not remove authorization from Keychain") }
+        guard status == errSecSuccess || status == errSecItemNotFound else { throw failure(status, action: "remove") }
+    }
+    private static func failure(_ status: OSStatus, action: String) -> AppError {
+        if status == errSecMissingEntitlement {
+            return .message("Keychain requires this app's signing identity (\(status)). Use normal Xcode simulator signing, or sign the iPhone app with your team.")
+        }
+        return .message("Could not \(action) authorization in Keychain (\(status)). Unlock your iPhone and try again.")
     }
 }
 
@@ -161,6 +168,7 @@ final class BrowserSignIn: NSObject, ASWebAuthenticationPresentationContextProvi
             let session = ASWebAuthenticationSession(url: url, callbackURLScheme: "spotifast-ios") { [weak self] url, error in
                 Task { @MainActor in
                     if let url { self?.complete(id, result: .success(url)) }
+                    else if (error as? ASWebAuthenticationSessionError)?.code == .canceledLogin { self?.complete(id, result: .failure(CancellationError())) }
                     else { self?.complete(id, result: .failure(error ?? CancellationError())) }
                 }
             }
