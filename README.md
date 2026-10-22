@@ -4,6 +4,11 @@
 
 <h1 align="center">Spotifast</h1>
 
+**Separate iPhone port:** the native SwiftUI app, Rust playback core, Xcode
+project, build instructions, and verification limits are in [ios/README.md](ios/README.md).
+The desktop application below remains the upstream baseline. The iOS app has
+not yet been compiled with an Apple SDK or tested on a physical iPhone.
+
 <p align="center"><strong>Spotify, native and fast.</strong><br>A lightweight music app for Linux, macOS, and Windows.</p>
 
 <p align="center">

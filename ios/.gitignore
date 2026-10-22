@@ -1,0 +1,7 @@
+build/
+Rust/target/
+*.xcuserstate
+xcuserdata/
+.DS_Store
+*.ipa
+Config/Local.xcconfig
