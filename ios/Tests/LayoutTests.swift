@@ -134,10 +134,24 @@ final class LayoutTests: XCTestCase {
             let scroll = try XCTUnwrap(scrolls(in: host.view).max { $0.contentSize.height < $1.contentSize.height }, "Screen must retain its native scrolling container")
             XCTAssertGreaterThan(scroll.contentSize.height, scroll.bounds.height, "Long content must remain scrollable: \(name)")
             XCTAssertLessThanOrEqual(scroll.contentSize.width, scroll.bounds.width + 1, "Horizontal content overflow: \(name)")
-            let end = max(-scroll.adjustedContentInset.top, scroll.contentSize.height - scroll.bounds.height + scroll.adjustedContentInset.bottom)
-            scroll.setContentOffset(CGPoint(x: 0, y: end), animated: false)
-            host.view.layoutIfNeeded()
-            RunLoop.main.run(until: Date().addingTimeInterval(0.05))
+            // Form estimates offscreen row heights. A jump can create more rows
+            // and move its actual end, especially at accessibility text sizes.
+            // Require two stable layouts at the real end before capturing it.
+            var settled = 0
+            for _ in 0..<24 {
+                scroll.layoutIfNeeded()
+                let end = max(-scroll.adjustedContentInset.top, scroll.contentSize.height - scroll.bounds.height + scroll.adjustedContentInset.bottom)
+                scroll.setContentOffset(CGPoint(x: 0, y: end), animated: false)
+                host.view.layoutIfNeeded()
+                RunLoop.main.run(until: Date().addingTimeInterval(0.05))
+                let updatedEnd = max(-scroll.adjustedContentInset.top, scroll.contentSize.height - scroll.bounds.height + scroll.adjustedContentInset.bottom)
+                if abs(end - updatedEnd) < 1 && abs(scroll.contentOffset.y - updatedEnd) < 1 {
+                    settled += 1
+                    if settled >= 2 { break }
+                } else { settled = 0 }
+            }
+            XCTAssertGreaterThanOrEqual(settled, 2, "Scroll end did not stabilize: \(name), offset=\(scroll.contentOffset.y), content=\(scroll.contentSize), viewport=\(scroll.bounds.size)")
+            XCTAssertLessThanOrEqual(scroll.contentSize.width, scroll.bounds.width + 1, "Horizontal content overflow after scrolling: \(name)")
             XCTAssertGreaterThan(scroll.contentOffset.y, -scroll.adjustedContentInset.top + 1, "The lower controls must be reachable by scrolling: \(name)")
             capture(name + "-End")
         }
