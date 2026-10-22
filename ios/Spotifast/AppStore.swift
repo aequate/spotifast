@@ -80,6 +80,7 @@ final class AppStore: ObservableObject {
             catch { return } // First launch has no grant; the sign-in screen owns it.
             guard epoch == generation else { return }
             await oauth.verifyAccount(restored.id)
+            try await api.configureCache(account: restored.id)
             let session = try await files.session(account: restored.id)
             guard epoch == generation else { return }
             profile = restored; savedSession = session
@@ -101,6 +102,7 @@ final class AppStore: ObservableObject {
                 let signedIn = try await Profile(api.request("me"))
                 guard epoch == generation else { return }
                 await oauth.verifyAccount(signedIn.id)
+                try await api.configureCache(account: signedIn.id)
                 let session = try await files.session(account: signedIn.id)
                 guard epoch == generation else { return }
                 profile = signedIn; savedSession = session
@@ -126,13 +128,15 @@ final class AppStore: ObservableObject {
         audio.allowPlayback()
         let credentials = useSaved ? try await oauth.playbackCredentials() : nil
         let token = credentials == nil || credentials == .null ? try await oauth.access(.playback) : nil
+        let cacheDirectory = await api.audioCacheDirectory()
         guard epoch == generation else { return }
         credentialsSaved = false
         try await rust.send(.object([
             "op": .string("connect"), "token": token.map(JSON.string) ?? .null,
             "credentials": credentials ?? .null, "username": .string(profile.id),
             "device_id": .string(preferences.deviceID), "name": .string("Spotifast iPhone"),
-            "bitrate": .number(Double(preferences.bitrate)), "normalisation": .bool(preferences.normalisation), "gapless": .bool(preferences.gapless)
+            "bitrate": .number(Double(preferences.bitrate)), "normalisation": .bool(preferences.normalisation), "gapless": .bool(preferences.gapless),
+            "cache_directory": cacheDirectory.map(JSON.string) ?? .null
         ]))
     }
 
@@ -146,8 +150,8 @@ final class AppStore: ObservableObject {
         audio.cancelAutomaticResume()
         audio.stop(); profile = nil; local = nil; playback = Playback(); queue = []; savedSession = nil; lastSession = nil; credentialsSaved = false
         media.update(playback)
-        await api.invalidate()
         do { try await rust.send(.object(["op": .string("disconnect")])) } catch { self.error = error.localizedDescription }
+        await api.invalidate()
         do { try await oauth.signOut(); try await files.clearSession() } catch { self.error = error.localizedDescription }
     }
 
@@ -470,5 +474,18 @@ final class AppStore: ObservableObject {
     }
     func loadLyrics(_ uri: String) async throws {
         try await rust.send(.object(["op": .string("lyrics"), "uri": .string(uri)]))
+    }
+    func clearCache() async {
+        guard let account = profile?.id else { return }
+        let epoch = generation
+        do {
+            // Disconnect before deleting files used by the streaming session.
+            audio.stop()
+            try await rust.send(.object(["op": .string("disconnect")]))
+            await api.invalidate()
+            guard epoch == generation else { return }
+            try await api.configureCache(account: account)
+            await ArtworkPipeline.shared.clear()
+        } catch { if epoch == generation { error = error.localizedDescription } }
     }
 }

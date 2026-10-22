@@ -46,17 +46,24 @@ struct CollectionView: View {
             }
         }
         .navigationTitle(item.kind.capitalized).navigationBarTitleDisplayMode(.inline)
-        .toolbar { if item.kind == "playlist" && item.owner == store.profile?.id { Button("Edit") { edit = true } } }
+        .toolbar {
+            if item.kind == "playlist", item.owner == store.profile?.id || item.collaborative {
+                Menu("Edit") {
+                    if item.owner == store.profile?.id { Button("Playlist details") { edit = true } }
+                    NavigationLink("Playlist items") { PlaylistItemsEditor(item: item) }
+                }
+            }
+        }
         .sheet(isPresented: $edit) { NavigationStack { PlaylistEditor(item: item) }.environmentObject(store).modifier(StoreErrorPresenter()) }
         .task { await load(reset: true); do { saved = try await store.api.membership(item.uri) } catch { } }
-        .refreshable { await load(reset: true) }
+        .refreshable { await load(reset: true, fresh: true) }
     }
-    private func load(reset: Bool) async {
+    private func load(reset: Bool, fresh: Bool = false) async {
         if loading && !reset { return }
         let ticket = requests.begin(); loading = true; failure = nil
         defer { if requests.accepts(ticket) { loading = false; requests.finish(ticket) } }
         do {
-            let page = try await store.api.collection(item, next: reset ? nil : next)
+            let page = try await store.api.collection(item, next: reset ? nil : next, fresh: fresh)
             try Task.checkCancellation(); guard requests.accepts(ticket) else { return }
             rows = reset ? page.rows : rows + page.rows; next = page.next
         } catch is CancellationError { } catch { if requests.accepts(ticket) { failure = error.localizedDescription } }

@@ -4,7 +4,7 @@ root="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$root"
 mkdir -p build/logs build/artifacts
 node scripts/generate-project.mjs --check
-plutil -lint Config/Info.plist Spotifast/PrivacyInfo.xcprivacy Spotifast.xcodeproj/project.pbxproj
+plutil -lint Config/Info.plist Config/Spotifast.entitlements Spotifast/PrivacyInfo.xcprivacy Spotifast.xcodeproj/project.pbxproj
 xcodebuild -version | tee build/logs/xcode.txt
 xcrun --sdk iphoneos --show-sdk-version | tee -a build/logs/xcode.txt
 rustc --version | tee build/logs/rust.txt

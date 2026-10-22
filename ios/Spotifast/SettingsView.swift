@@ -33,7 +33,8 @@ struct SettingsView: View {
             }
             Section("Storage") {
                 Button("Clear artwork from memory") { Task { await ArtworkPipeline.shared.clear() } }
-                Text("Artwork memory cache budget: 12 MiB. Audio uses a 128 KiB handoff, including track-change tags. This port does not keep an audio disk cache or download music for offline listening.").font(.footnote).foregroundStyle(.secondary)
+                Button("Clear disk cache and disconnect playback") { Task { await store.clearCache() } }
+                Text("Artwork memory budget: 12 MiB. Audio handoff: 128 KiB. Spotify audio cache: 128 MiB on disk. Library and catalogue cache: 8 MiB, refreshed after five minutes or when you pull to refresh. Clearing disk caches disconnects playback; tap Reconnect afterwards. Cached audio still needs Spotify authorization and is not an offline download.").font(.footnote).foregroundStyle(.secondary)
             }
             Section("About") {
                 LabeledContent("Spotifast iOS", value: "0.1.0")

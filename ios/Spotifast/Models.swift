@@ -71,8 +71,10 @@ struct ItemRow: Identifiable, Sendable {
 struct ItemPage: Sendable {
     let rows: [ItemRow]
     let next: String?
+    let endOffset: Int
     init(_ value: JSON, wrapper: String? = nil) {
         let offset = value["offset"].int ?? 0
+        endOffset = offset + value["items"].array.count
         rows = value["items"].array.enumerated().compactMap { i, raw in
             let item: JSON
             if let wrapper { item = raw[wrapper] }

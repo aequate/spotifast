@@ -6,7 +6,6 @@ use librespot_connect::{
 use librespot_core::{
     SpotifyUri,
     authentication::Credentials,
-    cache::Cache,
     config::{DeviceType, SessionConfig},
     session::Session,
 };
@@ -29,10 +28,6 @@ use std::{
 };
 
 pub type Callback = unsafe extern "C" fn(*mut c_void);
-
-fn credential_cache() -> Result<Cache, librespot_core::Error> {
-    Cache::new::<&std::path::Path>(None, None, None, None).map(Cache::with_memory_credentials)
-}
 
 #[derive(Clone)]
 pub struct Notify(pub Option<Callback>, pub usize);
@@ -96,6 +91,7 @@ pub enum Command {
         bitrate: u16,
         normalisation: bool,
         gapless: bool,
+        cache_directory: Option<String>,
     },
     Disconnect,
     Play,
@@ -254,6 +250,7 @@ impl Engine {
                 bitrate,
                 normalisation,
                 gapless,
+                cache_directory,
             } => {
                 if username.is_empty() || device_id.len() < 16 || name.len() > 100 {
                     return Err("Invalid playback configuration".into());
@@ -284,9 +281,15 @@ impl Engine {
                 let saved = self.credentials.clone();
                 let generations = self.generation.clone();
                 self.runtime.as_ref().ok_or("Runtime stopped")?.spawn(async move {
-                    let cache = match credential_cache() {
+                    let cache = match crate::cache::open(cache_directory.as_deref().map(std::path::Path::new)) {
                         Ok(cache) => cache,
-                        Err(_) => return,
+                        Err(_) => {
+                            let mut state = shared.lock().unwrap_or_else(|p| p.into_inner());
+                            if generations.load(Ordering::SeqCst) != generation { return; }
+                            state.connecting = false;
+                            state.error = Some("The audio cache could not open. Clear the cache in Settings and reconnect.".into());
+                            state.revision += 1; drop(state); notify.fire(); return;
+                        }
                     };
                     let session = Session::new(SessionConfig { device_id: device_id.clone(), autoplay: Some(false), ..SessionConfig::default() }, Some(cache));
                     let Some(build_mixer) = mixer::find(Some("softvol")) else { return; };
@@ -811,7 +814,7 @@ mod tests {
 
     #[test]
     fn playback_credential_is_retained_in_memory_for_the_native_keychain_handoff() {
-        let cache = credential_cache().unwrap();
+        let cache = crate::cache::open(None).unwrap();
         assert!(cache.credentials().is_none());
         let grant = Credentials::with_access_token("temporary-test-grant");
         cache.save_credentials(&grant);

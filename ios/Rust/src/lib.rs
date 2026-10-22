@@ -1,4 +1,5 @@
 //! iOS host boundary. Desktop code is included by path, never copied.
+mod cache;
 mod engine;
 #[path = "../../../src/eq.rs"]
 pub mod eq;

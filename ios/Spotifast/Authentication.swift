@@ -4,25 +4,6 @@ import Foundation
 import Security
 import UIKit
 
-enum Grant: String, Codable, Sendable { case web, playback }
-
-enum TokenForm {
-    static func encode(_ fields: [String: String]) -> Data {
-        var body = URLComponents()
-        body.queryItems = fields.map { URLQueryItem(name: $0.key, value: $0.value) }
-        // URLComponents follows URI query rules, where '+' is literal. OAuth
-        // form bodies decode '+' as a space, so it must be escaped explicitly.
-        return Data((body.percentEncodedQuery ?? "").replacingOccurrences(of: "+", with: "%2B").utf8)
-    }
-}
-
-struct Tokens: Codable, Sendable {
-    var access: String
-    var refresh: String
-    var expires: Date
-    var clientID: String
-}
-
 enum Keychain {
     private static var service: String { (Bundle.main.bundleIdentifier ?? "local.spotifast.ios") + ".credentials" }
     static func read(_ name: String) throws -> Data? {
@@ -67,27 +48,11 @@ struct PKCE {
         guard let result = url.url else { throw AppError.message("Invalid sign-in URL") }; return result
     }
     func code(from url: URL) throws -> String {
-        guard url.scheme == "spotifast-ios", url.host == "oauth", url.path == "/callback",
-              let parts = URLComponents(url: url, resolvingAgainstBaseURL: false),
-              parts.queryItems?.filter({ $0.name == "state" }).count == 1,
-              parts.queryItems?.first(where: { $0.name == "state" })?.value == state else { throw AppError.message("Sign-in callback did not match this session") }
-        if parts.queryItems?.contains(where: { $0.name == "error" }) == true { throw AppError.message("Spotify authorization was declined") }
-        guard parts.queryItems?.filter({ $0.name == "code" }).count == 1,
-              let code = parts.queryItems?.first(where: { $0.name == "code" })?.value, !code.isEmpty else { throw AppError.message("Spotify did not return an authorization code") }
-        return code
+        try OAuthCallback.code(from: url, state: state)
     }
 }
 
-extension Data {
-    var base64URL: String { base64EncodedString().replacingOccurrences(of: "+", with: "-").replacingOccurrences(of: "/", with: "_").replacingOccurrences(of: "=", with: "") }
-}
-
-// URLSession never follows redirects with an authorization header or a POST.
-final class NoRedirect: NSObject, URLSessionTaskDelegate, @unchecked Sendable {
-    func urlSession(_ session: URLSession, task: URLSessionTask, willPerformHTTPRedirection response: HTTPURLResponse, newRequest request: URLRequest, completionHandler: @escaping (URLRequest?) -> Void) { completionHandler(nil) }
-}
-
-actor OAuthClient {
+actor OAuthClient: OAuthAccess {
     private var accountID: String?
     private var tokens: [Grant: Tokens] = [:]
     private var refreshes: [Grant: Task<Tokens, Error>] = [:]

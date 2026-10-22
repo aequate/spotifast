@@ -73,10 +73,10 @@ struct LibraryView: View {
         .toolbar { if section == .playlists { Button("Create playlist", systemImage: "plus") { create = true } } }
         .alert("New playlist", isPresented: $create) { TextField("Name", text: $name); Button("Create") { store.perform { _ = try await store.api.createPlaylist(name: name); name = ""; await load(reset: true) } }.disabled(name.trimmingCharacters(in: .whitespaces).isEmpty); Button("Cancel", role: .cancel) {} }
         .task(id: section) { await load(reset: true) }
-        .refreshable { await load(reset: true) }
+        .refreshable { await load(reset: true, fresh: true) }
         .scrollDismissesKeyboard(.interactively)
     }
-    private func load(reset: Bool) async {
+    private func load(reset: Bool, fresh: Bool = false) async {
         let currentSection = section
         if loading && !reset { return }
         let ticket = requests.begin()
@@ -84,7 +84,7 @@ struct LibraryView: View {
         defer { if requests.accepts(ticket) { loading = false; requests.finish(ticket) } }
         if reset { rows = []; next = nil }
         do {
-            let page = try await store.api.library(currentSection, next: reset ? nil : next)
+            let page = try await store.api.library(currentSection, next: reset ? nil : next, fresh: fresh)
             try Task.checkCancellation(); guard requests.accepts(ticket), currentSection == section else { return }
             rows = reset ? page.rows : rows + page.rows; next = page.next
         } catch is CancellationError { } catch { if requests.accepts(ticket) { failure = error.localizedDescription } }

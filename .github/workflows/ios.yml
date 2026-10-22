@@ -11,6 +11,21 @@ concurrency:
   group: ios-${{ github.ref }}
   cancel-in-progress: true
 jobs:
+  swift:
+    name: Portable Swift tests
+    runs-on: ubuntu-latest
+    container: swift:6.4.1-noble
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - run: bash ios/scripts/test-portable.sh
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: swift-tests-${{ github.sha }}
+          path: ios/build/portable-tests.xml
+          if-no-files-found: warn
+          retention-days: 14
   rust:
     name: Rust tests and lint
     runs-on: ubuntu-latest

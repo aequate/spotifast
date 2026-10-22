@@ -1,11 +1,16 @@
 import Foundation
+#if canImport(FoundationNetworking)
+import FoundationNetworking
+#endif
 
 actor SpotifyAPI {
-    let oauth: OAuthClient
+    let oauth: any OAuthAccess
     private var session: URLSession
     private var generation = 0
     private var cooldown = Date.distantPast
-    init(oauth: OAuthClient) {
+    private var cacheScope: CacheScope?
+    private var catalogueRevision = 0
+    init(oauth: any OAuthAccess) {
         self.oauth = oauth
         session = Self.makeSession()
     }
@@ -17,21 +22,39 @@ actor SpotifyAPI {
         config.urlCache = nil
         return URLSession(configuration: config, delegate: NoRedirect(), delegateQueue: nil)
     }
-    func invalidate() {
+    func configureCache(account: String) async throws {
+        let epoch = generation
+        let scope = try await CacheStore.shared.open(account: account)
+        guard epoch == generation else { throw CancellationError() }
+        cacheScope = scope
+    }
+    func audioCacheDirectory() -> String? { cacheScope?.audioDirectory.path }
+    func invalidate() async {
         generation += 1; cooldown = .distantPast
+        catalogueRevision += 1; cacheScope = nil
         let oldSession = session; session = Self.makeSession()
         // Cancelling an enumerated task list races with requests for the next
         // account. Retire the entire old session instead.
         oldSession.invalidateAndCancel()
+        try? await CacheStore.shared.close(clear: true)
     }
     static func url(_ path: String) throws -> URL {
-        let url = path.hasPrefix("https://") ? URL(string: path) : URL(string: "https://api.spotify.com/v1/" + path)
-        guard let url, url.scheme == "https", url.host == "api.spotify.com", url.port == nil, url.user == nil, url.password == nil, url.path.hasPrefix("/v1/") else { throw AppError.message("Refused an unexpected Spotify API address") }
-        return url
+        try WebAPIAddress.url(path)
     }
-    func request(_ path: String, method: String = "GET", body: JSON? = nil) async throws -> JSON {
+    func request(_ path: String, method: String = "GET", body: JSON? = nil, fresh: Bool = false) async throws -> JSON {
         let epoch = generation
         let url = try Self.url(path)
+        let scope = cacheScope; let revision = catalogueRevision
+        let ttl = method == "GET" ? CatalogueCachePolicy.ttl(url) : nil
+        if !fresh, ttl != nil, let scope, let cached = await CacheStore.shared.read(url.absoluteString, scope: scope) {
+            try Task.checkCancellation()
+            guard epoch == generation else { throw CancellationError() }
+            if revision == catalogueRevision { return cached }
+        }
+        if method != "GET" {
+            catalogueRevision += 1
+            if let scope { try? await CacheStore.shared.invalidateMetadata(scope: scope) }
+        }
         var refreshed = false
         var forceRefresh = false
         var rateRetries = 0
@@ -71,11 +94,14 @@ actor SpotifyAPI {
                 }
             }
             if data.isEmpty { return .null }
-            return try JSONDecoder().decode(JSON.self, from: data)
+            let value = try JSONDecoder().decode(JSON.self, from: data)
+            if let ttl, let scope, revision == catalogueRevision { try? await CacheStore.shared.write(value, key: url.absoluteString, ttl: ttl, scope: scope) }
+            guard epoch == generation else { throw CancellationError() }
+            return value
         }
     }
-    func library(_ section: LibrarySection, next: String? = nil) async throws -> ItemPage {
-        var json = try await request(next ?? section.path)
+    func library(_ section: LibrarySection, next: String? = nil, fresh: Bool = false) async throws -> ItemPage {
+        var json = try await request(next ?? section.path, fresh: fresh)
         if section == .artists { json = json["artists"] }
         return ItemPage(json, wrapper: section.wrapper)
     }
@@ -89,7 +115,7 @@ actor SpotifyAPI {
         let key = kind == "show" ? "shows" : kind == "artist" ? "artists" : kind + "s"
         return ItemPage(result[key])
     }
-    func collection(_ item: SpotifyItem, next: String? = nil) async throws -> ItemPage {
+    func collection(_ item: SpotifyItem, next: String? = nil, fresh: Bool = false) async throws -> ItemPage {
         let path: String
         switch item.kind {
         case "playlist": path = "playlists/\(item.resourceID)/items?limit=30"
@@ -98,7 +124,7 @@ actor SpotifyAPI {
         case "artist": path = "artists/\(item.resourceID)/albums?limit=30&include_groups=album,single"
         default: throw AppError.message("This item does not have a collection page")
         }
-        return ItemPage(try await request(next ?? path))
+        return ItemPage(try await request(next ?? path, fresh: fresh))
     }
     func devices() async throws -> [Device] {
         let json = try await request("me/player/devices")
@@ -136,6 +162,10 @@ actor SpotifyAPI {
     }
     func add(_ item: SpotifyItem, to playlist: SpotifyItem) async throws {
         _ = try await request("playlists/\(playlist.resourceID)/items", method: "POST", body: .object(["uris": .strings([item.uri])]))
+    }
+    func updatePlaylistItems(_ item: SpotifyItem, body: JSON, method: String) async throws {
+        guard item.kind == "playlist", ["PUT", "DELETE"].contains(method) else { throw AppError.message("Invalid playlist edit") }
+        _ = try await request("playlists/\(item.resourceID)/items", method: method, body: body)
     }
     static func escape(_ value: String) -> String { value.addingPercentEncoding(withAllowedCharacters: .alphanumerics) ?? "" }
 }

@@ -1,4 +1,6 @@
 build/
+.build/
+.swiftpm/
 Rust/target/
 *.xcuserstate
 xcuserdata/

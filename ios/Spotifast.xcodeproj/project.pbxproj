@@ -29,6 +29,10 @@
 			isa = PBXBuildFile;
 			fileRef = E781E919746FCDC16FCE322B;
 		};
+		4BB84197305ED8E1DE93F20D = {
+			isa = PBXBuildFile;
+			fileRef = 6EE25CEC449414FF05E74DA2;
+		};
 		9690FFED7B97A7390B98ED8C = {
 			isa = PBXBuildFile;
 			fileRef = 960F8CD43C3B9989E12F20EA;
@@ -49,9 +53,25 @@
 			isa = PBXBuildFile;
 			fileRef = E257CC4297759BFD01B2DC85;
 		};
+		157CB75F19DE03D59521AC1A = {
+			isa = PBXBuildFile;
+			fileRef = C9BAAEF75466415B66B9F995;
+		};
+		91821CBED369BD534361E5F3 = {
+			isa = PBXBuildFile;
+			fileRef = EDBC4AE0A2DC67F4EA922E2E;
+		};
 		C52BD7D1A4712F9DC238AF9A = {
 			isa = PBXBuildFile;
 			fileRef = 8019182DC49C1A598A9DADE8;
+		};
+		A40B0F926D85863D11B5A82B = {
+			isa = PBXBuildFile;
+			fileRef = DA447AE7C26578D74BB65F72;
+		};
+		9D71E59A9EC97EA3F1C2A444 = {
+			isa = PBXBuildFile;
+			fileRef = CEE2F443D3731B915B9FB1A9;
 		};
 		DF8F363ECC414AC21EC28D6D = {
 			isa = PBXBuildFile;
@@ -146,6 +166,12 @@
 			path = Spotifast/BrowseViews.swift;
 			sourceTree = "<group>";
 		};
+		6EE25CEC449414FF05E74DA2 = {
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.swift;
+			path = Spotifast/CacheStore.swift;
+			sourceTree = "<group>";
+		};
 		960F8CD43C3B9989E12F20EA = {
 			isa = PBXFileReference;
 			lastKnownFileType = sourcecode.swift;
@@ -176,10 +202,34 @@
 			path = Spotifast/Models.swift;
 			sourceTree = "<group>";
 		};
+		C9BAAEF75466415B66B9F995 = {
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.swift;
+			path = Spotifast/NetworkTransport.swift;
+			sourceTree = "<group>";
+		};
+		EDBC4AE0A2DC67F4EA922E2E = {
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.swift;
+			path = Spotifast/OAuthModels.swift;
+			sourceTree = "<group>";
+		};
 		8019182DC49C1A598A9DADE8 = {
 			isa = PBXFileReference;
 			lastKnownFileType = sourcecode.swift;
 			path = Spotifast/PlayerView.swift;
+			sourceTree = "<group>";
+		};
+		DA447AE7C26578D74BB65F72 = {
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.swift;
+			path = Spotifast/PlaylistEdits.swift;
+			sourceTree = "<group>";
+		};
+		CEE2F443D3731B915B9FB1A9 = {
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.swift;
+			path = Spotifast/PlaylistItemsEditor.swift;
 			sourceTree = "<group>";
 		};
 		AE54B624791FA02289D650D0 = {
@@ -303,12 +353,17 @@
 				1F0C641226B359E74292C407,
 				1DD539824B69002055027275,
 				E781E919746FCDC16FCE322B,
+				6EE25CEC449414FF05E74DA2,
 				960F8CD43C3B9989E12F20EA,
 				41E626261BCF430D684986F0,
 				9DF01F24647C96AC51E98E47,
 				C641BA5185408ED01C00BACF,
 				E257CC4297759BFD01B2DC85,
+				C9BAAEF75466415B66B9F995,
+				EDBC4AE0A2DC67F4EA922E2E,
 				8019182DC49C1A598A9DADE8,
+				DA447AE7C26578D74BB65F72,
+				CEE2F443D3731B915B9FB1A9,
 				AE54B624791FA02289D650D0,
 				2B653CD44DC5D2A6B8C57018,
 				5C3F823D32D3B81E6F42E544,
@@ -467,12 +522,17 @@
 				ABA6369F6C5B6A181A59E91C,
 				C3F853CA1142EE5AE2E7F5E7,
 				DFAA02509B79733F6FB54F5C,
+				4BB84197305ED8E1DE93F20D,
 				9690FFED7B97A7390B98ED8C,
 				07AB7CE0019E73D3292F760E,
 				2A4A6997D56EC39568420FD6,
 				9828C3F92E96378AB155CDAC,
 				3679C8366E1F053C8F24AC09,
+				157CB75F19DE03D59521AC1A,
+				91821CBED369BD534361E5F3,
 				C52BD7D1A4712F9DC238AF9A,
+				A40B0F926D85863D11B5A82B,
+				9D71E59A9EC97EA3F1C2A444,
 				DF8F363ECC414AC21EC28D6D,
 				50FBDD4783ED4EE575743D8D,
 				D0727CEA105A8CC520E52215,
