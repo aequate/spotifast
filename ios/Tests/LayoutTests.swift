@@ -102,12 +102,12 @@ final class LayoutTests: XCTestCase {
                     let content = NavigationStack { screen }
                         .environmentObject(store).environment(\.colorScheme, scheme)
                         .environment(\.dynamicTypeSize, type)
-                    try attach(content, size: size, name: "Screen-\(name)-\(Int(size.width))x\(Int(size.height))-\(scheme)-\(type)")
+                    try attach(content, size: size, name: "Screen-\(name)-\(Int(size.width))x\(Int(size.height))-\(scheme)-\(type)", includeScrollEnd: true)
                 }
             }
         }
     }
-    private func attach<Content: View>(_ content: Content, size: CGSize, name: String) throws {
+    private func attach<Content: View>(_ content: Content, size: CGSize, name: String, includeScrollEnd: Bool = false) throws {
         let scene = try XCTUnwrap(UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first)
         let previous = scene.windows.first(where: \.isKeyWindow)
         let window = UIWindow(windowScene: scene)
@@ -117,12 +117,29 @@ final class LayoutTests: XCTestCase {
         defer { window.isHidden = true; previous?.makeKeyAndVisible() }
         host.view.frame = window.bounds; host.view.setNeedsLayout(); host.view.layoutIfNeeded()
         RunLoop.main.run(until: Date().addingTimeInterval(0.05))
-        var drew = false
-        let result = UIGraphicsImageRenderer(size: size).image { _ in
-            drew = host.view.drawHierarchy(in: host.view.bounds, afterScreenUpdates: true)
+        func capture(_ title: String) {
+            var drew = false
+            let result = UIGraphicsImageRenderer(size: size).image { _ in
+                drew = host.view.drawHierarchy(in: host.view.bounds, afterScreenUpdates: true)
+            }
+            XCTAssertTrue(drew, "Native render failed: \(title)")
+            let attachment = XCTAttachment(image: result); attachment.name = title; attachment.lifetime = .keepAlways
+            add(attachment)
         }
-        XCTAssertTrue(drew, "Native render failed: \(name)")
-        let attachment = XCTAttachment(image: result); attachment.name = name; attachment.lifetime = .keepAlways
-        add(attachment)
+        capture(name)
+        if includeScrollEnd {
+            func scrolls(in view: UIView) -> [UIScrollView] {
+                (view as? UIScrollView).map { [$0] } ?? view.subviews.flatMap { scrolls(in: $0) }
+            }
+            let scroll = try XCTUnwrap(scrolls(in: host.view).max { $0.contentSize.height < $1.contentSize.height }, "Screen must retain its native scrolling container")
+            XCTAssertGreaterThan(scroll.contentSize.height, scroll.bounds.height, "Long content must remain scrollable: \(name)")
+            XCTAssertLessThanOrEqual(scroll.contentSize.width, scroll.bounds.width + 1, "Horizontal content overflow: \(name)")
+            let end = max(-scroll.adjustedContentInset.top, scroll.contentSize.height - scroll.bounds.height + scroll.adjustedContentInset.bottom)
+            scroll.setContentOffset(CGPoint(x: 0, y: end), animated: false)
+            host.view.layoutIfNeeded()
+            RunLoop.main.run(until: Date().addingTimeInterval(0.05))
+            XCTAssertGreaterThan(scroll.contentOffset.y, -scroll.adjustedContentInset.top + 1, "The lower controls must be reachable by scrolling: \(name)")
+            capture(name + "-End")
+        }
     }
 }
