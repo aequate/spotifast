@@ -70,13 +70,23 @@ final class SignInUITests: XCTestCase {
         // form, never the application/keyboard surface.
         let form = app.collectionViews.firstMatch
         XCTAssertTrue(form.waitForExistence(timeout: 5))
-        for _ in 0..<6 {
-            if element.exists && element.isHittable { return }
-            form.swipeDown()
-        }
-        for _ in 0..<16 {
-            if element.exists && element.isHittable { return }
-            form.swipeUp()
+        for _ in 0..<24 {
+            if element.exists {
+                let frame = element.frame
+                let top = app.navigationBars.firstMatch.frame.maxY + 12
+                let bottom = app.keyboards.firstMatch.exists ? app.keyboards.firstMatch.frame.minY - 12 : app.frame.maxY - 24
+                // UIKit may report a partly visible Form row as hittable even
+                // when its text field is behind the navigation bar. Require
+                // the complete tap target to be inside the visible viewport.
+                if element.isHittable && frame.minY >= top && frame.maxY <= bottom { return }
+                let center = (top + bottom) / 2
+                let limit = max(40, (bottom - top) * 0.4)
+                let movement = max(-limit, min(limit, center - frame.midY))
+                let origin = form.coordinate(withNormalizedOffset: .zero)
+                let start = origin.withOffset(CGVector(dx: form.frame.width / 2, dy: center - form.frame.minY - movement / 2))
+                let end = origin.withOffset(CGVector(dx: form.frame.width / 2, dy: center - form.frame.minY + movement / 2))
+                start.press(forDuration: 0.05, thenDragTo: end)
+            } else { form.swipeUp() }
         }
     }
     private func dismissKeyboard(in app: XCUIApplication) {

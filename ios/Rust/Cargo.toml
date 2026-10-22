@@ -33,7 +33,7 @@ lto = "thin"
 codegen-units = 1
 strip = "debuginfo"
 
-# Identical to the existing desktop patches. No new dependency source.
+# Existing desktop git pins are retained; the sole local exception is below.
 [patch.crates-io]
 # User-approved iOS-only fix for an unconditional macOS process query.
 # Original archive checksum and the sole changed method are verified in CI.
