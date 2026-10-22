@@ -2,9 +2,9 @@ name: iOS port
 on:
   workflow_dispatch:
   push:
-    paths: ['ios/**', 'src/eq.rs', 'src/limiter.rs', 'src/link.rs', 'rust-toolchain.toml', '.github/workflows/ios.yml']
+    paths: ['ios/**', '!ios/**/*.md', 'src/eq.rs', 'src/limiter.rs', 'src/link.rs', 'rust-toolchain.toml', '.github/workflows/ios.yml']
   pull_request:
-    paths: ['ios/**', 'src/eq.rs', 'src/limiter.rs', 'src/link.rs', 'rust-toolchain.toml', '.github/workflows/ios.yml']
+    paths: ['ios/**', '!ios/**/*.md', 'src/eq.rs', 'src/limiter.rs', 'src/link.rs', 'rust-toolchain.toml', '.github/workflows/ios.yml']
 permissions:
   contents: read
 concurrency:
@@ -23,7 +23,9 @@ jobs:
         if: always()
         with:
           name: swift-tests-${{ github.sha }}
-          path: ios/build/portable-tests.xml
+          path: |
+            ios/build/portable-tests.xml
+            ios/build/portable-tests.log
           if-no-files-found: warn
           retention-days: 14
   rust:

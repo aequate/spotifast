@@ -75,6 +75,38 @@ final class LayoutTests: XCTestCase {
             try attach(content, size: CGSize(width: 320, height: 360), name: "JamQR-320-\(scheme)")
         }
     }
+    func testNativeFullPlayerSettingsAndJamScreensRenderAtPhoneSizes() throws {
+        // Layout-only inputs for real production views. No grants are restored,
+        // no server is substituted, and no playback/API success is asserted.
+        let store = AppStore()
+        store.playback.item = try XCTUnwrap(SpotifyItem(.object([
+            "uri": .string("spotify:track:fixture"),
+            "name": .string("A long song title to check the complete player layout"),
+            "artists": .array([.object(["name": .string("An artist with a long display name")])]),
+            "duration_ms": .number(180_000)
+        ])))
+        store.playback.deviceName = "This iPhone with a long device name"
+        store.playback.isLocal = true
+        store.preferences.eqEnabled = true
+        for scheme in [ColorScheme.light, .dark] {
+            for (size, type) in [(CGSize(width: 320, height: 568), DynamicTypeSize.large),
+                                 (CGSize(width: 430, height: 932), .accessibility5),
+                                 (CGSize(width: 568, height: 320), .large)] {
+                let screens: [(String, AnyView)] = [
+                    ("Player", AnyView(PlayerView())),
+                    ("Settings", AnyView(SettingsView())),
+                    ("Equalizer", AnyView(EqualizerView())),
+                    ("Jam", AnyView(JamView()))
+                ]
+                for (name, screen) in screens {
+                    let content = NavigationStack { screen }
+                        .environmentObject(store).environment(\.colorScheme, scheme)
+                        .environment(\.dynamicTypeSize, type)
+                    try attach(content, size: size, name: "Screen-\(name)-\(Int(size.width))x\(Int(size.height))-\(scheme)-\(type)")
+                }
+            }
+        }
+    }
     private func attach<Content: View>(_ content: Content, size: CGSize, name: String) throws {
         let scene = try XCTUnwrap(UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first)
         let previous = scene.windows.first(where: \.isKeyWindow)
