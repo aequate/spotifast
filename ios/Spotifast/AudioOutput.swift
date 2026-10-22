@@ -148,7 +148,8 @@ final class MediaControls {
                 }
             }
         }
-        var info: [String: Any] = [MPMediaItemPropertyTitle: item.name, MPMediaItemPropertyArtist: item.subtitle, MPMediaItemPropertyAlbumTitle: "Spotifast", MPMediaItemPropertyPlaybackDuration: Double(item.duration) / 1000, MPNowPlayingInfoPropertyElapsedPlaybackTime: Double(state.progress) / 1000, MPNowPlayingInfoPropertyPlaybackRate: state.playing ? 1.0 : 0.0]
+        var info: [String: Any] = [MPMediaItemPropertyTitle: item.name, MPMediaItemPropertyArtist: item.subtitle, MPMediaItemPropertyPlaybackDuration: Double(item.duration) / 1000, MPNowPlayingInfoPropertyElapsedPlaybackTime: Double(state.progress) / 1000, MPNowPlayingInfoPropertyPlaybackRate: state.playing ? 1.0 : 0.0]
+        if let album = item.album, !album.isEmpty { info[MPMediaItemPropertyAlbumTitle] = album }
         if let artwork { info[MPMediaItemPropertyArtwork] = artwork }
         MPNowPlayingInfoCenter.default().nowPlayingInfo = info
     }

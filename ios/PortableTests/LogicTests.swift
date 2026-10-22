@@ -7,6 +7,14 @@ import XCTest
 #endif
 
 final class LogicTests: XCTestCase {
+    func testAlbumAndPodcastShowMetadataPreservesTheRealTitle() throws {
+        var value: JSON = .object(["uri": .string("spotify:track:test"), "name": .string("A track"), "album": .object(["name": .string("The album")])])
+        XCTAssertEqual(try XCTUnwrap(SpotifyItem(value)).album, "The album")
+        value = .object(["uri": .string("spotify:episode:test"), "name": .string("An episode"), "show": .object(["name": .string("The show")])])
+        XCTAssertEqual(try XCTUnwrap(SpotifyItem(value)).album, "The show")
+        value = .object(["uri": .string("spotify:track:test"), "name": .string("An unexpanded track")])
+        XCTAssertNil(try XCTUnwrap(SpotifyItem(value)).album)
+    }
     func testJSONRoundTripsNullableAndNestedSpotifyResponses() throws {
         for value in [JSON.null, .bool(true), .number(1234), .string("عربي 🎵 +%&"), .array([.null, .string("track")]), .object(["items": .array([.null]), "next": .null])] {
             XCTAssertEqual(try JSONDecoder().decode(JSON.self, from: JSONEncoder().encode(value)), value)

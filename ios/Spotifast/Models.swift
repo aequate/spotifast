@@ -36,6 +36,7 @@ struct SpotifyItem: Identifiable, Hashable, Sendable {
     let uri: String
     let name: String
     let subtitle: String
+    let album: String?
     let kind: String
     let image: URL?
     let duration: Int
@@ -51,6 +52,7 @@ struct SpotifyItem: Identifiable, Hashable, Sendable {
         kind = value["type"].string ?? uri.components(separatedBy: ":").dropFirst().first ?? "track"
         let artists = value["artists"].array.compactMap { $0["name"].string }.joined(separator: ", ")
         subtitle = artists.isEmpty ? (value["publisher"].string ?? value["owner"]["display_name"].string ?? kind.capitalized) : artists
+        album = value["album"]["name"].string ?? value["show"]["name"].string
         let images = value["images"].array.isEmpty ? value["album"]["images"].array : value["images"].array
         let sorted = images.sorted { ($0["width"].int ?? 640) < ($1["width"].int ?? 640) }
         if let selected = sorted.first(where: { ($0["width"].int ?? 640) >= 160 }) ?? sorted.last, let address = selected["url"].string { image = URL(string: address) } else { image = nil }

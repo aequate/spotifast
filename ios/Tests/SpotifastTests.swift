@@ -24,12 +24,13 @@ final class SpotifastTests: XCTestCase {
     func testNativeNowPlayingMetadataAndCommandsFollowTheLocalDevice() throws {
         let controls = MediaControls()
         var state = Playback()
-        state.item = try XCTUnwrap(SpotifyItem(.object(["uri": .string("spotify:track:test"), "name": .string("Track title"), "artists": .array([.object(["name": .string("Artist name")])]), "duration_ms": .number(180_000)])))
+        state.item = try XCTUnwrap(SpotifyItem(.object(["uri": .string("spotify:track:test"), "name": .string("Track title"), "album": .object(["name": .string("Album title")]), "artists": .array([.object(["name": .string("Artist name")])]), "duration_ms": .number(180_000)])))
         state.isLocal = true; state.position = 10_000; state.playing = false
         controls.update(state)
         let info = try XCTUnwrap(MPNowPlayingInfoCenter.default().nowPlayingInfo)
         XCTAssertEqual(info[MPMediaItemPropertyTitle] as? String, "Track title")
         XCTAssertEqual(info[MPMediaItemPropertyArtist] as? String, "Artist name")
+        XCTAssertEqual(info[MPMediaItemPropertyAlbumTitle] as? String, "Album title")
         XCTAssertEqual(info[MPNowPlayingInfoPropertyElapsedPlaybackTime] as? Double, 10)
         XCTAssertEqual(info[MPNowPlayingInfoPropertyPlaybackRate] as? Double, 0)
         XCTAssertTrue(MPRemoteCommandCenter.shared().playCommand.isEnabled)

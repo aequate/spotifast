@@ -196,7 +196,7 @@ final class AppStore: ObservableObject {
         if let message = snapshot.error, message != lastEngineError { error = message }; lastEngineError = snapshot.error
         if snapshot.connected, snapshot.active, snapshot.uri != nil {
             var value = Playback()
-            value.item = SpotifyItem(.object(["uri": snapshot.uri.map(JSON.string) ?? .null, "name": .string(snapshot.title), "type": .string(snapshot.uri?.contains(":episode:") == true ? "episode" : "track"), "duration_ms": .number(Double(snapshot.durationMs)), "artists": .array(snapshot.artists.map { .object(["name": .string($0)]) }), "images": .array(snapshot.coverUrl.map { [.object(["url": .string($0), "width": .number(300)])] } ?? [])]))
+            value.item = SpotifyItem(.object(["uri": snapshot.uri.map(JSON.string) ?? .null, "name": .string(snapshot.title), "type": .string(snapshot.uri?.contains(":episode:") == true ? "episode" : "track"), "album": .object(["name": .string(snapshot.album)]), "duration_ms": .number(Double(snapshot.durationMs)), "artists": .array(snapshot.artists.map { .object(["name": .string($0)]) }), "images": .array(snapshot.coverUrl.map { [.object(["url": .string($0), "width": .number(300)])] } ?? [])]))
             value.playing = snapshot.playing; value.position = snapshot.positionMs; value.shuffle = snapshot.shuffle; value.repeatMode = snapshot.repeat; value.volume = Int(Double(snapshot.volume) / 65535 * 100)
             value.isLocal = true; value.deviceID = preferences.deviceID; value.deviceName = "This iPhone"
             if Date() > optimisticUntil { playback = value }
