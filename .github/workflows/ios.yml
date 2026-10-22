@@ -45,7 +45,7 @@ jobs:
           cargo clippy --locked --manifest-path ios/Rust/Cargo.toml --all-targets -- -D warnings
           cargo test --locked --manifest-path ios/Rust/Cargo.toml
           node ios/scripts/generate-project.mjs --check
-          python3 .github/scripts/check-dependency-sources.py
+          python3 ios/scripts/check-dependencies.py
           python3 .github/scripts/check-review-evidence.py
   apple:
     name: iOS ${{ matrix.target }}

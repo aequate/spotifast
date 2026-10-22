@@ -12,6 +12,21 @@ fn owned(value: impl Into<Vec<u8>>) -> *mut c_char {
 }
 
 #[unsafe(no_mangle)]
+pub extern "C" fn sf_platform_info() -> *mut c_char {
+    catch_unwind(|| {
+        owned(
+            serde_json::json!({
+                "os": std::env::consts::OS,
+                "arch": std::env::consts::ARCH,
+                "osVersion": librespot_core::config::os_version()
+            })
+            .to_string(),
+        )
+    })
+    .unwrap_or(ptr::null_mut())
+}
+
+#[unsafe(no_mangle)]
 pub unsafe extern "C" fn sf_parse_link(value: *const c_char) -> *mut c_char {
     if value.is_null() {
         return ptr::null_mut();
@@ -171,6 +186,23 @@ pub unsafe extern "C" fn sf_destroy(engine: *mut Engine) {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn platform_reporting_uses_the_real_host_instead_of_a_testing_backend() {
+        let pointer = sf_platform_info();
+        assert!(!pointer.is_null());
+        let value: serde_json::Value =
+            serde_json::from_slice(unsafe { CStr::from_ptr(pointer) }.to_bytes()).unwrap();
+        unsafe {
+            sf_string_free(pointer);
+        }
+        assert_eq!(value["os"], std::env::consts::OS);
+        assert_eq!(value["arch"], std::env::consts::ARCH);
+        assert!(
+            value["osVersion"]
+                .as_str()
+                .is_some_and(|version| !version.is_empty() && version != "0")
+        );
+    }
     #[test]
     fn invite_boundary_preserves_urls_and_rejects_embedded_nul_and_invalid_utf8() {
         let address = b"https://spotify.link/TestInvite?si=a%2Bb%3D";

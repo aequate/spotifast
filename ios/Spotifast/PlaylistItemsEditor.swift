@@ -70,11 +70,11 @@ struct PlaylistItemsEditor: View {
         let ticket = requests.begin(); loading = true; failure = nil
         defer { if requests.accepts(ticket) { loading = false; requests.finish(ticket) } }
         do {
-            let header = try await store.api.request("playlists/\(item.resourceID)", fresh: true)
+            let header = try await store.api.request("playlists/\(item.resourceID)?fields=snapshot_id", fresh: true)
             guard let revision = header["snapshot_id"].string, !revision.isEmpty else { throw AppError.message("Spotify did not return the playlist revision") }
             if !reset && revision != snapshot { throw AppError.message("This playlist changed. Reload it before editing.") }
             let page = try await store.api.collection(item, next: reset ? nil : next, fresh: true)
-            let after = try await store.api.request("playlists/\(item.resourceID)", fresh: true)
+            let after = try await store.api.request("playlists/\(item.resourceID)?fields=snapshot_id", fresh: true)
             try Task.checkCancellation(); guard requests.accepts(ticket) else { return }
             guard after["snapshot_id"].string == revision else { throw AppError.message("This playlist changed while loading. Reload it before editing.") }
             guard reset || rows.count + page.rows.count <= 10_000 else { throw AppError.message("This editor holds up to 10,000 items at a time") }

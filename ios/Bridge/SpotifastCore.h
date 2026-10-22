@@ -13,6 +13,8 @@ char *sf_snapshot(const SFEngine *engine);
 // Sensitive: send only to Keychain, never logs, preferences, or ordinary files.
 char *sf_credentials(const SFEngine *engine);
 char *sf_eq_presets(void);
+// Real OS/version used by librespot for client-token requests. No credentials.
+char *sf_platform_info(void);
 char *sf_parse_link(const char *value);
 // Validate an existing invite only. Returns {url, shortened} JSON or NULL.
 // value points to length valid UTF-8 bytes. No network, session or Jam creation.

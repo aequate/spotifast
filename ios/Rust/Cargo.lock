@@ -2212,6 +2212,7 @@ dependencies = [
  "percent-encoding",
  "serde",
  "serde_json",
+ "sysinfo",
  "tokio",
 ]
 
@@ -2375,8 +2376,6 @@ dependencies = [
 [[package]]
 name = "sysinfo"
 version = "0.36.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "252800745060e7b9ffb7b2badbd8b31cfa4aa2e61af879d0a3bf2a317c20217d"
 dependencies = [
  "libc",
  "memchr",

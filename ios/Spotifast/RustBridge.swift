@@ -9,6 +9,11 @@ private let rustNotification: @convention(c) (UnsafeMutableRawPointer?) -> Void 
 // render callback. Commands and JSON work run on a dedicated serial queue.
 final class RustBridge: @unchecked Sendable {
     static let shared = RustBridge()
+    static func platformInfo() -> JSON {
+        guard let pointer = sf_platform_info() else { return .null }
+        defer { sf_string_free(pointer) }
+        return (try? JSONDecoder().decode(JSON.self, from: Data(bytes: pointer, count: strlen(pointer)))) ?? .null
+    }
     static func spotifyURI(_ text: String) -> String? {
         guard let result = text.withCString({ sf_parse_link($0) }) else { return nil }
         defer { sf_string_free(result) }

@@ -23,6 +23,10 @@ librespot-metadata = { version = "0.8", default-features = false }
 # Reuses the desktop Spotify link parser, including its tests.
 percent-encoding = "2"
 
+[target.'cfg(target_os = "ios")'.dependencies]
+# Use sysinfo's documented sandbox mode, preserving real version queries.
+sysinfo = { version = "0.36", default-features = false, features = ["apple-app-store"] }
+
 [profile.release]
 opt-level = "s"
 lto = "thin"
@@ -31,6 +35,10 @@ strip = "debuginfo"
 
 # Identical to the existing desktop patches. No new dependency source.
 [patch.crates-io]
+# User-approved iOS-only fix for an unconditional macOS process query.
+# Original archive checksum and the sole changed method are verified in CI.
+# See ../DEPENDENCIES.md. The desktop manifest/lockfile are unchanged.
+sysinfo = { path = "../Vendor/sysinfo" }
 librespot-audio = { git = "https://github.com/crmne/librespot", rev = "8c68baffac5a3052cd0f24a6fbc1970131589790" }
 librespot-connect = { git = "https://github.com/crmne/librespot", rev = "8c68baffac5a3052cd0f24a6fbc1970131589790" }
 librespot-core = { git = "https://github.com/crmne/librespot", rev = "8c68baffac5a3052cd0f24a6fbc1970131589790" }

@@ -1,0 +1,2 @@
+# Preserve the official archive's exact bytes across Windows/macOS checkouts.
+sysinfo/** -text -whitespace

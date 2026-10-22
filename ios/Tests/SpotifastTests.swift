@@ -2,6 +2,14 @@ import XCTest
 @testable import Spotifast
 
 final class SpotifastTests: XCTestCase {
+    func testRustReportsRealIOSVersionForClientTokens() {
+        let info = RustBridge.platformInfo()
+        XCTAssertEqual(info["os"].string, "ios")
+        XCTAssertTrue(["aarch64", "x86_64"].contains(info["arch"].string ?? ""))
+        let version = info["osVersion"].string ?? "0"
+        XCTAssertNotEqual(version, "0")
+        XCTAssertEqual(Int(version.split(separator: ".").first ?? "0"), ProcessInfo.processInfo.operatingSystemVersion.majorVersion)
+    }
     func testTokenFormKeepsLiteralPlusAndSeparators() {
         let encoded = String(decoding: TokenForm.encode(["refresh_token": "a+b&c=d"]), as: UTF8.self)
         XCTAssertTrue(encoded.contains("%2B"))

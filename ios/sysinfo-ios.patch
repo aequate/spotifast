@@ -1,0 +1,22 @@
+--- a/src/unix/apple/process.rs
++++ b/src/unix/apple/process.rs
+@@ -77,6 +77,7 @@
+ }
+ 
+ impl ProcessInner {
++    #[cfg(target_os = "macos")]
+     pub(crate) fn open_files(&self) -> Option<usize> {
+         let buffer_size_bytes = unsafe {
+             libc::proc_pidinfo(
+@@ -96,6 +97,11 @@
+         }
+     }
+ 
++    #[cfg(target_os = "ios")]
++    pub(crate) fn open_files(&self) -> Option<usize> {
++        None
++    }
++
+     // FIXME: Should query the value, because it can be changed with setrlimit and other means.
+     // For now, cannot find where to get this information sadly...
+     pub(crate) fn open_files_limit(&self) -> Option<usize> {

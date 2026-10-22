@@ -3,6 +3,7 @@ set -euo pipefail
 root="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$root"
 bash scripts/test-portable.sh
+python3 scripts/check-dependencies.py
 cargo fmt --manifest-path Rust/Cargo.toml -- --check
 cargo clippy --locked --manifest-path Rust/Cargo.toml --all-targets -- -D warnings
 cargo test --locked --manifest-path Rust/Cargo.toml
