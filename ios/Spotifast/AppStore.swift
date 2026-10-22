@@ -120,7 +120,7 @@ final class AppStore: ObservableObject {
     func reconnect() async {
         let epoch = generation
         do { try await connectLocal(useSaved: true) }
-        catch { if epoch == generation { error = error.localizedDescription } }
+        catch { if epoch == generation { self.error = error.localizedDescription } }
     }
     private func connectLocal(useSaved: Bool) async throws {
         guard let profile, profile.premium != false else { throw AppError.message("Sign in with a Spotify Premium account first") }
@@ -181,7 +181,7 @@ final class AppStore: ObservableObject {
                 playback = remote; media.update(playback)
             } else if remote == nil && !localConnected { playback = Playback(); media.update(playback) }
         } catch is CancellationError { }
-        catch { if epoch == generation { error = error.localizedDescription } }
+        catch { if epoch == generation { self.error = error.localizedDescription } }
     }
 
     private func receive(_ snapshot: EngineSnapshot, credentials: Data?) async {
@@ -222,7 +222,7 @@ final class AppStore: ObservableObject {
             }
         }
         if !credentialsSaved, let credentials {
-            do { try await oauth.savePlaybackCredentials(credentials, account: account); if epoch == generation { credentialsSaved = true } } catch is CancellationError { return } catch { if epoch == generation { error = error.localizedDescription } }
+            do { try await oauth.savePlaybackCredentials(credentials, account: account); if epoch == generation { credentialsSaved = true } } catch is CancellationError { return } catch { if epoch == generation { self.error = error.localizedDescription } }
         }
         guard epoch == generation, profile?.id == account else { return }
         let session: JSON = .object(["account": .string(account), "uri": snapshot.uri.map(JSON.string) ?? .null, "context": .string(snapshot.contextUri), "position_ms": .number(Double(snapshot.positionMs)), "manual": .strings(snapshot.queue.filter(\.manual).map(\.uri))])
@@ -431,11 +431,11 @@ final class AppStore: ObservableObject {
                 if revision == queueRevision, epoch == generation, target.deviceID == playback.deviceID, began > optimisticUntil { queue = items.map { QueueEntry(uri: $0.uri, item: $0, manual: false) } }
             }
         } catch is CancellationError { }
-        catch { if epoch == generation { error = error.localizedDescription } }
+        catch { if epoch == generation { self.error = error.localizedDescription } }
     }
     func refreshDevices() async {
         let epoch = generation
-        do { let values = try await api.devices(); if epoch == generation { devices = values } } catch { if epoch == generation { error = error.localizedDescription } }
+        do { let values = try await api.devices(); if epoch == generation { devices = values } } catch { if epoch == generation { self.error = error.localizedDescription } }
     }
     func transfer(_ device: Device) {
         guard !device.restricted else { error = "Spotify does not allow control of this device"; return }
@@ -459,7 +459,7 @@ final class AppStore: ObservableObject {
             do {
                 try await Task.sleep(for: .milliseconds(250)); try Task.checkCancellation()
                 try await files.save(value); try await applyEQ()
-            } catch is CancellationError { } catch { error = error.localizedDescription }
+            } catch is CancellationError { } catch { self.error = error.localizedDescription }
         }
     }
     func applyEQ() async throws {
@@ -486,6 +486,6 @@ final class AppStore: ObservableObject {
             guard epoch == generation else { return }
             try await api.configureCache(account: account)
             await ArtworkPipeline.shared.clear()
-        } catch { if epoch == generation { error = error.localizedDescription } }
+        } catch { if epoch == generation { self.error = error.localizedDescription } }
     }
 }

@@ -51,7 +51,14 @@ final class RustBridge: @unchecked Sendable {
             queue.async {
                 guard let handle = self.handle else { continuation.resume(throwing: AppError.message("The Rust playback engine could not start")); return }
                 if text.withCString({ sf_command(handle, $0) }) { continuation.resume() }
-                else { continuation.resume(throwing: AppError.message("Playback could not accept the command. Check the message in Settings.")) }
+                else {
+                    var message = "Playback could not accept the command. Reconnect in Settings."
+                    if let value = sf_snapshot(handle) {
+                        defer { sf_string_free(value) }
+                        if let snapshot = try? JSONDecoder().decode(EngineSnapshot.self, from: Data(bytes: value, count: strlen(value))), let detail = snapshot.error { message = detail }
+                    }
+                    continuation.resume(throwing: AppError.message(message))
+                }
                 self.signal()
             }
         }

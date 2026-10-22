@@ -58,6 +58,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/cache@v4
+        id: apple-cache
         with:
           path: |
             ~/.cargo/registry
@@ -81,3 +82,12 @@ jobs:
             ios/build/artifacts
           if-no-files-found: warn
           retention-days: 14
+      - name: Keep compiled Rust dependencies after an Apple build failure
+        if: failure() && steps.apple-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            ios/Rust/target
+          key: ios-apple-v1-${{ runner.os }}-${{ runner.arch }}-${{ matrix.target }}-${{ hashFiles('rust-toolchain.toml', 'ios/Rust/Cargo.lock') }}

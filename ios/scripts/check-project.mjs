@@ -16,10 +16,10 @@ if (existsSync(resolve(root, 'build/qa/node_modules/xcode'))) {
     const project = xcode.project(resolve(root, 'Spotifast.xcodeproj/project.pbxproj'));
     project.parseSync();
     const objects = project.hash.project.objects;
-    assert.equal(Object.keys(objects.PBXNativeTarget).filter(k => !k.endsWith('_comment')).length, 2);
+    assert.equal(Object.keys(objects.PBXNativeTarget).filter(k => !k.endsWith('_comment')).length, 3);
     const sources = objects.PBXSourcesBuildPhase;
     const phaseIDs = Object.keys(sources).filter(k => !k.endsWith('_comment'));
-    assert.equal(phaseIDs.length, 2);
+    assert.equal(phaseIDs.length, 3);
     for (const phase of phaseIDs) for (const entry of sources[phase].files) {
         const build = objects.PBXBuildFile[entry.value ?? entry];
         assert(build, 'Every source build reference resolves');
@@ -36,7 +36,7 @@ if (process.argv.includes('--syntax')) {
     const language = await Language.load(resolve(root, 'build/qa/node_modules/tree-sitter-wasms/out/tree-sitter-swift.wasm'));
     const parser = new Parser(); parser.setLanguage(language);
     let count = 0;
-    for (const folder of ['Spotifast', 'Tests']) for (const name of readdirSync(resolve(root, folder)).filter(n => n.endsWith('.swift'))) {
+    for (const folder of ['Spotifast', 'Tests', 'UITests']) for (const name of readdirSync(resolve(root, folder)).filter(n => n.endsWith('.swift'))) {
         const text = readFileSync(resolve(root, folder, name), 'utf8');
         const tree = parser.parse(text);
         const errors = [];

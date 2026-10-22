@@ -93,6 +93,9 @@ final class AudioOutput {
 @MainActor
 final class MediaControls {
     private var targets: [(MPRemoteCommand, Any)] = []
+    private var artworkTask: Task<Void, Never>?
+    private var artworkURL: URL?
+    private var artwork: MPMediaItemArtwork?
     var play: (() -> Void)?
     var pause: (() -> Void)?
     var next: (() -> Void)?
@@ -119,8 +122,32 @@ final class MediaControls {
     func update(_ state: Playback) {
         let center = MPRemoteCommandCenter.shared()
         for command in [center.playCommand, center.pauseCommand, center.togglePlayPauseCommand, center.nextTrackCommand, center.previousTrackCommand, center.changePlaybackPositionCommand] { command.isEnabled = state.isLocal && state.item != nil }
-        guard state.isLocal, let item = state.item else { MPNowPlayingInfoCenter.default().nowPlayingInfo = nil; return }
-        MPNowPlayingInfoCenter.default().nowPlayingInfo = [MPMediaItemPropertyTitle: item.name, MPMediaItemPropertyArtist: item.subtitle, MPMediaItemPropertyAlbumTitle: "Spotifast", MPMediaItemPropertyPlaybackDuration: Double(item.duration) / 1000, MPNowPlayingInfoPropertyElapsedPlaybackTime: Double(state.progress) / 1000, MPNowPlayingInfoPropertyPlaybackRate: state.playing ? 1.0 : 0.0]
+        guard state.isLocal, let item = state.item else {
+            artworkTask?.cancel(); artworkTask = nil; artworkURL = nil; artwork = nil
+            MPNowPlayingInfoCenter.default().nowPlayingInfo = nil
+            return
+        }
+        if artworkURL != item.image {
+            artworkTask?.cancel(); artwork = nil; artworkURL = item.image
+            if let url = item.image {
+                artworkTask = Task { [weak self] in
+                    do {
+                        let image = try await ArtworkPipeline.shared.image(url, pixels: 600)
+                        try Task.checkCancellation()
+                        guard let self, self.artworkURL == url else { return }
+                        let cover = MPMediaItemArtwork(boundsSize: image.size) { _ in image }
+                        self.artwork = cover
+                        if var info = MPNowPlayingInfoCenter.default().nowPlayingInfo {
+                            info[MPMediaItemPropertyArtwork] = cover
+                            MPNowPlayingInfoCenter.default().nowPlayingInfo = info
+                        }
+                    } catch { } // Metadata and controls remain available without a cover.
+                }
+            }
+        }
+        var info: [String: Any] = [MPMediaItemPropertyTitle: item.name, MPMediaItemPropertyArtist: item.subtitle, MPMediaItemPropertyAlbumTitle: "Spotifast", MPMediaItemPropertyPlaybackDuration: Double(item.duration) / 1000, MPNowPlayingInfoPropertyElapsedPlaybackTime: Double(state.progress) / 1000, MPNowPlayingInfoPropertyPlaybackRate: state.playing ? 1.0 : 0.0]
+        if let artwork { info[MPMediaItemPropertyArtwork] = artwork }
+        MPNowPlayingInfoCenter.default().nowPlayingInfo = info
     }
-    deinit { targets.forEach { $0.0.removeTarget($0.1) } }
+    deinit { artworkTask?.cancel(); targets.forEach { $0.0.removeTarget($0.1) } }
 }

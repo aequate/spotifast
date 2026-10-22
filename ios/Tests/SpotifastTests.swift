@@ -1,7 +1,25 @@
 import XCTest
+import MediaPlayer
 @testable import Spotifast
 
 final class SpotifastTests: XCTestCase {
+    @MainActor
+    func testNativeNowPlayingMetadataAndCommandsFollowTheLocalDevice() throws {
+        let controls = MediaControls()
+        var state = Playback()
+        state.item = try XCTUnwrap(SpotifyItem(.object(["uri": .string("spotify:track:test"), "name": .string("Track title"), "artists": .array([.object(["name": .string("Artist name")])]), "duration_ms": .number(180_000)])))
+        state.isLocal = true; state.position = 10_000; state.playing = false
+        controls.update(state)
+        let info = try XCTUnwrap(MPNowPlayingInfoCenter.default().nowPlayingInfo)
+        XCTAssertEqual(info[MPMediaItemPropertyTitle] as? String, "Track title")
+        XCTAssertEqual(info[MPMediaItemPropertyArtist] as? String, "Artist name")
+        XCTAssertEqual(info[MPNowPlayingInfoPropertyElapsedPlaybackTime] as? Double, 10)
+        XCTAssertEqual(info[MPNowPlayingInfoPropertyPlaybackRate] as? Double, 0)
+        XCTAssertTrue(MPRemoteCommandCenter.shared().playCommand.isEnabled)
+        state.isLocal = false; controls.update(state)
+        XCTAssertNil(MPNowPlayingInfoCenter.default().nowPlayingInfo)
+        XCTAssertFalse(MPRemoteCommandCenter.shared().playCommand.isEnabled)
+    }
     func testRustReportsRealIOSVersionForClientTokens() {
         let info = RustBridge.platformInfo()
         XCTAssertEqual(info["os"].string, "ios")

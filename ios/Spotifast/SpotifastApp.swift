@@ -64,13 +64,13 @@ struct SignInView: View {
                 }.padding(.vertical, 24)
             }
             Section("Spotify app") {
-                TextField("Client ID", text: $store.preferences.clientID).textInputAutocapitalization(.never).autocorrectionDisabled().accessibilityLabel("Spotify Client ID")
+                TextField("Client ID", text: $store.preferences.clientID).textInputAutocapitalization(.never).autocorrectionDisabled().accessibilityLabel("Spotify Client ID").accessibilityIdentifier("signin.clientID")
                 Text("Create a personal app in Spotify's developer dashboard and register this redirect URI exactly:")
                 Text(PKCE.redirect).font(.footnote.monospaced()).textSelection(.enabled)
                 Link("Open Spotify developer dashboard", destination: URL(string: "https://developer.spotify.com/dashboard")!)
             }
             Section {
-                Button { Task { await store.signIn(.web) } } label: { HStack { Text("Sign in with Spotify"); Spacer(); if store.busy { ProgressView() } else { Image(systemName: "arrow.right") } } }.disabled(store.busy)
+                Button { Task { await store.signIn(.web) } } label: { HStack { Text("Sign in with Spotify"); Spacer(); if store.busy { ProgressView() } else { Image(systemName: "arrow.right") } } }.disabled(store.busy).accessibilityIdentifier("signin.submit")
             } footer: { Text("Authorization opens Apple's secure sign-in browser. Your password stays with Spotify. Grants are stored in this iPhone's Keychain.") }
         }.navigationTitle("Spotifast").scrollDismissesKeyboard(.interactively)
     }

@@ -109,6 +109,10 @@
 			isa = PBXBuildFile;
 			fileRef = E863A3BFE721109FB539A482;
 		};
+		7C49CCAA285912600077E63D = {
+			isa = PBXBuildFile;
+			fileRef = 56354EDC8685178FD9C655C4;
+		};
 		5B8B4A348B97AD8AC5324905 = {
 			isa = PBXBuildFile;
 			fileRef = 11A1ABABEEB7EFFD8299A3E2;
@@ -286,6 +290,12 @@
 			path = Tests/SpotifastTests.swift;
 			sourceTree = "<group>";
 		};
+		56354EDC8685178FD9C655C4 = {
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.swift;
+			path = UITests/SignInUITests.swift;
+			sourceTree = "<group>";
+		};
 		11A1ABABEEB7EFFD8299A3E2 = {
 			isa = PBXFileReference;
 			lastKnownFileType = folder.assetcatalog;
@@ -310,6 +320,13 @@
 			explicitFileType = wrapper.cfbundle;
 			includeInIndex = 0;
 			path = SpotifastTests.xctest;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		4FBFBC38B371A3C363AA8DE3 = {
+			isa = PBXFileReference;
+			explicitFileType = wrapper.cfbundle;
+			includeInIndex = 0;
+			path = SpotifastUITests.xctest;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 		BB46FAA54206ABCCC287A42B = {
@@ -383,12 +400,21 @@
 			);
 			sourceTree = "<group>";
 		};
+		49C26BDDCF51C52D2A463376 = {
+			isa = PBXGroup;
+			name = "UI Tests";
+			children = (
+				56354EDC8685178FD9C655C4,
+			);
+			sourceTree = "<group>";
+		};
 		0A3E27B8CA818264D75C8D81 = {
 			isa = PBXGroup;
 			name = Products;
 			children = (
 				681C948D238C526E9E3424E0,
 				F739566ED5280322FF98A798,
+				4FBFBC38B371A3C363AA8DE3,
 			);
 			sourceTree = "<group>";
 		};
@@ -397,6 +423,7 @@
 			children = (
 				1455444174429298B0F374B3,
 				C4E2E7F217DE3642E7714F4E,
+				49C26BDDCF51C52D2A463376,
 				BB46FAA54206ABCCC287A42B,
 				6AE27F664CD0832AD1AAA396,
 				A31EE09A4AEEB4EF95DFFF87,
@@ -443,6 +470,22 @@
 			productReference = F739566ED5280322FF98A798;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
+		C972F427C0D501B6444DFE03 = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 44B9AD3C53386DFA7CCD2643;
+			buildPhases = (
+				7CEA9B3371728EC6DECD5B9C,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				F9A94CEF8CF7D85CE881E703,
+			);
+			name = SpotifastUITests;
+			productName = SpotifastUITests;
+			productReference = 4FBFBC38B371A3C363AA8DE3;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -456,6 +499,10 @@
 						CreatedOnToolsVersion = 16.0;
 					};
 					9805CBD60EB4F66728D5D195 = {
+						CreatedOnToolsVersion = 16.0;
+						TestTargetID = A172CEDCAE47474B615C54D5;
+					};
+					C972F427C0D501B6444DFE03 = {
 						CreatedOnToolsVersion = 16.0;
 						TestTargetID = A172CEDCAE47474B615C54D5;
 					};
@@ -476,6 +523,7 @@
 			targets = (
 				A172CEDCAE47474B615C54D5,
 				9805CBD60EB4F66728D5D195,
+				C972F427C0D501B6444DFE03,
 			);
 		};
 /* End PBXProject section */
@@ -552,6 +600,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		7CEA9B3371728EC6DECD5B9C = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				7C49CCAA285912600077E63D,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -623,6 +679,42 @@
 			};
 			name = Release;
 		};
+		C1207D08D6565AC213220BA3 = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_BUNDLE_IDENTIFIER = local.spotifast.ios.uitests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				GENERATE_INFOPLIST_FILE = YES;
+				SWIFT_VERSION = 5.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_TARGET_NAME = Spotifast;
+				CODE_SIGN_STYLE = Automatic;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ONLY_ACTIVE_ARCH = YES;
+				ENABLE_TESTABILITY = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+			};
+			name = Debug;
+		};
+		E8522DE0F1412BFC86C9F18E = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_BUNDLE_IDENTIFIER = local.spotifast.ios.uitests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				GENERATE_INFOPLIST_FILE = YES;
+				SWIFT_VERSION = 5.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_TARGET_NAME = Spotifast;
+				CODE_SIGN_STYLE = Automatic;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
 		488864B3D19480A82F7F1786 = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -672,6 +764,15 @@
 			buildConfigurations = (
 				12946E3301F628EAC49744B8,
 				42EE86C84AAD61C6F57FBD29,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		44B9AD3C53386DFA7CCD2643 = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C1207D08D6565AC213220BA3,
+				E8522DE0F1412BFC86C9F18E,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

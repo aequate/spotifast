@@ -39,7 +39,7 @@ struct SettingsView: View {
             Section("About") {
                 LabeledContent("Spotifast iOS", value: "0.1.0")
                 Link("Original Spotifast", destination: URL(string: "https://github.com/crmne/spotifast")!)
-                Text("Independent iOS port. No telemetry, embedded browser engine, or hosted backend. Background audio, routes, Connect and battery use still need physical iPhone verification.").font(.footnote).foregroundStyle(.secondary)
+                Text("A native music player built from the open source Spotifast project. Your music and account stay with Spotify.").font(.footnote).foregroundStyle(.secondary)
             }
         }.navigationTitle("Settings")
         .confirmationDialog("Sign out and remove this account's saved authorizations and queue?", isPresented: $confirmSignOut, titleVisibility: .visible) { Button("Sign out", role: .destructive) { Task { await store.signOut() } } }
